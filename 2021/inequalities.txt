@@ -1,0 +1,82 @@
+Solve for x given zmin, zmax, ymin, and ymax:
+
+z = x + y
+zmin <= z <= zmax
+xmin <= x <= xmax
+ymin <= y <= ymax
+
+zmin = xmin + ymin
+zmax = xmax + ymax
+
+x = y - z
+x >= ymin - z
+x <= y - zmin
+
+z >= x + ymin
+z <= x + ymax
+
+x <= z - ymin
+x >= z - ymax
+
+
+For addition:
+
+(xmin, ymax) = (zmin - ymax, zmax - ymin) intersect original (xmin, max)
+
+e.g., given original (xmin, xmax) = (1, 9), (zmin, zmax) = (0, 1)  and (ymin, ymax) = (0, 100)
+(xmin, xmax) = (-100, 1) intersect (1, 9) == (1, 1)
+
+
+For multiplication:
+
+(xmin, ymax) =
+if (ymax < 0)      # y is negative
+    if (zmax < 0)  # z is negative, so x is positive
+       (zmax / ymin, zmin / ymax)
+    elif (zmin < 0 && zmax >= 0)  # sign of x is -sign of z
+       (zmax / ymax, zmin / ymax)
+    else  # z is positive so x is negative
+       (zmin / ymin, zmax / ymax)
+elif (ymin > 0)   # y is positive
+    if (zmax < 0)  # z is negative, so x is negative
+       (zmin / ymin, zmax / ymax)
+    elif (zmin < 0 && zmax >= 0)  # sign of x is -sign of z
+       (zmin / ymin, zmax / ymax)
+    else  # z is positive so x is negative
+       (zmin / ymin, zmax / ymax)
+else  # y range includes zero
+    (-inf, inf)
+
+if (ymin <= 0 && ymax >= 0: (-inf, inf)
+if (zmax < 0 && ymax < 0): (zmax / ymin, zmin / ymax)
+if (zmax < 0 && ymin > 0): (zmin / ymin, zmax / ymax)
+if (zmax >= 0 && zmin < 0 && ymax < 0): (zmax / ymax, zmin / ymax
+
+For Division
+
+z = x / y
+x = z * y
+y = x / z
+
+For positive x and z and round towards zero (== floor):
+smallest x = z * y
+largest x = (z + 1) * y - 1
+smallest y = x / (z + 1) + 1
+if z == 0, then largest y == inf
+if z > 0, then largest y = x / z
+
+
+For 'eql':
+z = x == y
+x = y if z == 1 else unknown
+y = x if z == 1 else unknown
+
+
+For 'mod'
+z = x % y
+x >= z
+y > z
+if x > z, then y >= z + x
+
+
+Note: xmin should always round down, xmax should always round up

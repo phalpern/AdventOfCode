@@ -1,0 +1,134 @@
+# Advent of code day 23, part 1
+# Minimum energy to organize amphipods
+
+# String representing map is exactly 19 characters long. Each character
+# is either '.' for an empty space or 'A', 'B', 'C', or 'D' for the specific
+# amphipod type. The first 11 positions in the string represent the hallway.
+# The remaining 8 positions represent the 4 desination rooms, two consecutive
+# positions per rooom, with the first of the two representing the position
+# closer to the hallway. The 'roomEncoding' dictionary maps each destination
+# room to a tuple of its starting position within the string and the location
+# of its entrance in the hallway:
+mapEncoding = {
+    'A' : (11, 2),
+    'B' : (13, 4),
+    'C' : (15, 6),
+    'D' : (17, 8)
+}
+
+costPerMove = {
+    'A' : 1,
+    'B' : 10,
+    'C' : 100,
+    'D' : 1000
+}
+
+solution  = "...........AABBCCDD"
+emptyHall = "..........."
+
+def strSwapChars(str, i, j):
+    """Return copy of `str` with `str[i]` and `str[j]` swapped"""
+    if i > j:
+        i, j = (j, i)  # Swap i and j so that i < j
+    return "{}{}{}{}{}".format(str[:i],str[j],str[i+1:j],str[i],str[j+1:])
+
+def nobrainers(mapStr, startCost):
+    """Perform any "no-brainer" moves and return a tuple `(newMap, newCost)`
+    A no-brainer is any move that will move an amphipod to its final
+    position"""
+
+    newCost = startCost
+    changes = True
+    while changes:
+        changes = False
+
+        # First, see if any amphipod in any room can move to its destination
+        for room in ('A', 'B', 'C', 'D'):
+            distance = 0
+            src, srcEntrance = mapEncoding[room]
+            amphipod = mapStr[src]
+            if amphipod == room: continue  # Same room move
+            distance += 1    # Room to hallway move
+            if amphipod == '.':
+                distance += 1  # back position to front position move
+                src += 1
+                amphipod = mapStr[src]
+                if amphipod == room: continue
+                if amphipod == '.': continue
+            dest, destEntrance = mapEncoding[amphipod]
+            if mapStr[dest] != '.': continue  # Destination not clear
+            distance += 1  # Hallway to roo move
+            if mapStr[dest + 1] == '.':
+                distance += 1  # Front position to back position move
+                dest += 1
+            i, j = (srcEntrance, destEntrance)
+            if i > j:
+                i, j = (j, i)  # Swap i and j so that i < j
+            if (mapStr[i:j+1] != emptyHall[i:j+1]): continue  # Path not clear
+            distance += j + 1 - i
+
+            assert(mapStr[src] != '.' and mapStr[dest] == '.')
+            mapStr = strSwapChars(mapStr, src, dest)
+            newCost += distance * costPerMove[amphipod]
+            changes = True
+            break
+
+        if changes: continue
+
+        # If no changes above, check if any amphipod in the hallway can move to
+        # its destination room.
+        for src in range(len(emptyHall)):
+            distance = 0
+            amphipod = mapStr[src]
+            if amphipod == '.': continue
+            dest, destEntrance = mapEncoding[amphipod]
+            if mapStr[dest] != '.': continue  # Destination not clear
+            distance += 1  # Hallway to roo move
+            if mapStr[dest + 1] == '.':
+                distance += 1  # Front position to back position move
+                dest += 1
+            i, j = (src, destEntrance)
+            if i > j:
+                i, j = (j, i)  # Swap i and j so that i < j
+            if (mapStr[i+1:j+1] != emptyHall[i+1:j+1]): continue
+            distance += j - i
+
+            assert(mapStr[src] != '.' and mapStr[dest] == '.')
+            mapStr = strSwapChars(mapStr, src, dest)
+            newCost += distance * costPerMove[amphipod]
+            changes = True
+            break
+
+    return (mapStr, newCost)
+
+def printMap(mapStr):
+    print("#############")
+    print("#{}#".format(mapStr[:11]))
+    print("###{}#{}#{}#{}###".format(mapStr[mapEncoding['A'][0]],
+                                     mapStr[mapEncoding['B'][0]],
+                                     mapStr[mapEncoding['C'][0]],
+                                     mapStr[mapEncoding['D'][0]]))
+    print("  #{}#{}#{}#{}#".format(mapStr[mapEncoding['A'][0] + 1],
+                                   mapStr[mapEncoding['B'][0] + 1],
+                                   mapStr[mapEncoding['C'][0] + 1],
+                                   mapStr[mapEncoding['D'][0] + 1]))
+    print("  #########")
+
+def workStep(workQueue, memo):
+    mapStr, cost = workQueue.pop(0)  # Work on lowest cost map so far
+
+    workQueue.sort(key = lambda w : w[1])  # Sort by cost so far
+
+def solve(workQueue, memo):
+    while workQueue[0][0] != solution:
+        pass
+
+mapStr = ".A.........BA.BDDCC"
+printMap(mapStr)
+
+# energy = solve([ (mapStr, 0) ], { mapStr : 0 })
+
+
+mapStr, cost = nobrainers(mapStr, 4)
+print("Cost = ",cost)
+printMap(mapStr)
