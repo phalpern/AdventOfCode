@@ -22,9 +22,10 @@ ideal style, though I try to be tidy and document when necessary.
 
 The solutions are origanized into directories by year. Each puzzle source is in
 the form *puzzleXX.Y.py* or *puzzleXX.Y.cpp*, depending on which computer
-langauge I used to solve it.  The *XX* represents the puzzle number (as a
-2-digit decimal) and the *Y* represents the sub-part (part 1 or 2). Sometimes I
-have multiple solutions and add has a letter suffix to *Y*.  Puzzle inputs are
-typically named *puzzleXX_input.txt*, since most puzzles use the same input for
-both parts 1 and 2. Files with a name of the form *puzzleXX_sample.txt* are
-small sample inputs copied from the puzzle description.
+langauge I used to solve it.  The *XX* represents the puzzle number and the *Y*
+represents the sub-part (part 1 or 2). Sometimes I have multiple solutions and
+add a letter suffix to *Y*.  Puzzle inputs are typically named
+*puzzleXX_input.txt*.  The input files typically do not have a *Y* component
+because most puzzles use the same input for parts 1 and 2. Files with a name of
+the form *puzzleXX_sample.txt* are small inputs copied from the puzzle
+description.
