@@ -11,5 +11,4 @@
 import sys
 import openInput
 
-input = openInput(sys.argv)
-print(f"Reading input from {inputFilename}...")
+input = openInput.openInput(sys.argv)
