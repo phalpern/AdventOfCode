@@ -12,7 +12,7 @@ def openInput(argv):
     two parts of one puzzle is typically the same file, so Y does not show up
     in the default input file name.
     """
-    puzzle = re.sub(r'\.[^/]*$', "", argv[0])
+    puzzle = re.sub(r'\.[^/\\]*$', "", argv[0])
     if len(argv) > 1:
         inputFilename = puzzle + '_' + argv[1] + ".txt"
     else:
