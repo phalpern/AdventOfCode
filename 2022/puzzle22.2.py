@@ -47,32 +47,18 @@ import openInput
 #
 # ## Detecting the size of the cube from the input
 #
-# The input consists of a series of lines containing the symbols '.', '#', and
-# space. The non-space characters are given coordinates `(row, col)` where
-# `row` is the line number and `col` is the position of a symbol within the
-# line. The puzzle text uses 1-based indexing, but we will use 0-based indexing
-# for programming convenience and simply add 1 to the resulting coordinates
-# before outputting the results. Spaces are used to produce the irregular shape
-# of a flattened cube. There are exactly 11 ways to flatten a cube, if you
-# eliminate mirrored and rotated equivalent shapes:
-#```
-#  XXX  XX    XX    XX    X    X
-#   X    XX    X     X   XXX  XX
-#   X     XX    XX   X    X    XX
-#   X    X     X     XX   X    X
+# The input consists of a series of lines containing the symbols '.' and '#'
+# (for open tiles and wall tiles, respectively), grouped into 6 square panels
+# arranged in an irregular shape that defines a flattened cube. Some rows have
+# leading spaces, i.e., when the panel is not left-most in the flattened
+# shape. The main challenge in determining the size of the cube is that there
+# are no delimiters between horizontally adjacent panels, so the width of one
+# panel cannot be determined without more context.
 #
-#  X    X     X     X    X
-#  XXX  XX    XX    XX   X
-#   X    XX    X     XX  XX
-#   X    X     XX     X   X
-#                         X
-# ```
-# Note that in every case -- whether scanning from the top down or from left to
-# right, no two adjacent rows or columns have an overlap of more than one
-# face. If, when scanning top to bottom, we find that we have more rows than
-# columns, then the number of columns is the length of the side of the
-# cube. Conversely, when we see two dissimilar rows, the overlap between them
-# is the length of the side of the cube.
+# The solution chosen here is to read all of the input at once, sum up the
+# count of non-space characters of all the lines, divide that by 6 (to find the
+# number of tiles in each panel) and find its square root to get the length of
+# each side.
 #
 #
 # ## Folding the input into a cube
