@@ -12,3 +12,7 @@ import sys
 import openInput
 
 input = openInput.openInput(sys.argv)
+
+# Code to read input goes here
+
+close(input)
