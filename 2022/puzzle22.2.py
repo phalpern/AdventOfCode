@@ -24,12 +24,14 @@ import math
 # *top*, and *bottom*.
 #
 # A *panel* is a 2-D square grid of '.' and '#' symbols that is mapped to one
-# face of the cube. There are six panels described in the input stream.
+# face of the cube. There are six panels described in the input stream.  Each
+# panel has a different origin row and column on the game board.
 #
-# We refer to the direction of motion on one panel as *east*, *south*, *west*,
-# and *north*. Note that a panel can be mapped to a cube face in any of four
-# orientations (see *orientation*, below), so north is not necessarily in the
-# direction of the top face of the cube.
+# We refer to the direction of motion within a panel as *east*, *south*,
+# *west*, and *north*. Note that a panel can be mapped to a cube face in any of
+# four orientations (see *orientation*, below), so north is not necessarily in
+# the direction of the top face of the cube. The north-west corner of the panel
+# is mapped to the panel's origin on the game board.
 #
 # We refer to a change in direction (per commands in the input path) as
 # *turning right* or *turning left*.
@@ -45,8 +47,8 @@ import math
 # design, as a mapping from each direction out of the 2-D panel to an adjacent
 # face of the cube. For example, if a panel, *P* is mapped to the right face,
 # it can be oriented such moving north out of the panel lands you on the front
-# face of the cube, or it can be oriented such that nort goes to the top, back,
-# or bottom faces of the cube, for a total of four possible orientations.
+# face of the cube, or it can be oriented such that north goes to the top,
+# back, or bottom faces of the cube, for a total of four possible orientations.
 #
 #
 # ## Detecting the size of the cube from the input
@@ -107,8 +109,11 @@ import math
 # corresponding to the face onto which we've navigated.
 #
 # The landing position is determined by looking up the edge corresponding to
-# the face we **came from** and mapping the linear position appropriately. The
-# new logical direction is away from the face we came from.
+# the face we **came from** and mapping the linear position appropriately to
+# adjacent edge on the new panel.  For example, if we move east on row 2
+# (counting from zero) and land on the northern edge of a new panel, then we
+# must count 2 *columns* from the *end* to get the correct landing
+# position. The new logical direction is away from the face we came from.
 
 ################# CONSTANTS ########################
 
@@ -116,6 +121,8 @@ import math
 # where we start navigation.
 FRONT_FACE, BACK_FACE, RIGHT_FACE, LEFT_FACE, TOP_FACE, BOTTOM_FACE = (
     0, 1, 2, 3, 4, 5)
+
+FACE_NAMES = ("FRONT", "BACK", "RIGHT", "LEFT", "TOP", "BOTTOM")
 
 # Directions. Enumerators increase in value turning in the clockwise direction.
 # For each direction, adding 1 modulo 4 turns right, subtracting 1 modulo 4
@@ -158,8 +165,14 @@ class Panel:
 
     def __repr__(self):
         """Return a string representation of this panel for debugging"""
-        return f"Panel: origin = ({self.originRow}, {self.originCol}), " + \
-               f"face = {self.face}, orientation = {self.orientation}"
+        ret = f"Panel: origin = ({self.originRow}, {self.originCol}), " + \
+              f"face = {FACE_NAMES[self.face]}, orientation = "
+        sep = '('
+        for f in self.orientation:
+            ret += sep + FACE_NAMES[f]
+            sep = ', '
+        ret += ')'
+        return ret
 
     def isInbounds(self, row, col):
         """Return `True` if the coordinate `(row, col)` falls within this panel"""
@@ -180,7 +193,7 @@ class Panel:
         # but I've reduced it to a partial manual inner-product.
         rowMul, colMul = MOVE_DELTAS[(direction + 1) % 4]
         offset = relRow * rowMul + relCol * colMul
-        if offset < 0: offset += self.size - 1
+        if rowMul < 0 or colMul < 0: offset += self.size - 1
         return offset
 
     def entrancePosition(self, fromPanel, fromEdgeOffset):
@@ -198,19 +211,13 @@ class Panel:
         # The new direction opposite the from direction
         direction = (fromDirection + 2) % 4
 
-        # This computation can probably be done with a lookup rather than a
-        # nested `if`, perhaps in combination with a matrix multiplication.
-        # The edge offset calculation is not only the reverse of the one in
-        # `exitEdgeOffset`, but is the mirror image, i.e., the offset is applied
-        # in the counter-clockwise direction.
-        if direction == EAST:
-            relRow, relCol = fromEdgeOffset, 0
-        elif direction == SOUTH:
-            relRow, relCol = 0, bound - fromEdgeOffset
-        elif direction == WEST:
-            relRow, relCol = bound - fromEdgeOffset, bound
-        elif direction == NORTH:
-            relRow, relCol = bound, fromEdgeOffset
+        # This computation is the mirror image of the exit offset computation.
+        rowMul, colMul = MOVE_DELTAS[(fromDirection - 1) % 4]
+        edgeRowDir, edgeColDir = MOVE_DELTAS[fromDirection]
+        relRow = fromEdgeOffset * rowMul
+        relCol = fromEdgeOffset * colMul
+        if rowMul < 0 or edgeRowDir > 0: relRow += self.size - 1
+        if colMul < 0 or edgeColDir > 0: relCol += self.size - 1
 
         row = self.originRow + relRow
         col = self.originCol + relCol
@@ -289,19 +296,22 @@ def move(board, cube, panel, row, col, direction, num):
     """Move `num` tiles in the specified `direction` and return the new panel,
     row, column, and direction"""
     size = panel.size
+    assert(panel.isInbounds(row, col))
+    assert('.' == board[row][col])
     for i in range(num):
         # Find next row.
         nextPanel = panel
-        nextDir = direction
         drow, dcol = MOVE_DELTAS[direction]
         nextRow = row + drow
         nextCol = col + dcol
+        nextDir = direction
         # If reached edge of the panel, find landing position on next panel.
         if not panel.isInbounds(nextRow, nextCol):
             nextPanel                 = cube[panel.orientation[direction]]
             edgeOffset                = panel.exitEdgeOffset(row, col, direction)
             nextRow, nextCol, nextDir = nextPanel.entrancePosition(panel,
                                                                    edgeOffset)
+            assert(cube[nextPanel.orientation[(nextDir+2) % 4]] is panel)
         assert(nextPanel.isInbounds(nextRow, nextCol))
         if board[nextRow][nextCol] == '#':
             break  # Hit a wall; end loop without advancing
@@ -313,7 +323,115 @@ def move(board, cube, panel, row, col, direction, num):
     assert(board[row][col] == '.')
     return panel, row, col, direction
 
-################ main program #####################################3333
+################ tests ############################################
+
+def testMove():
+    """Test the `move()` function"""
+    # Don't need a complete board for this test, just three panels.
+    board = [ "    ....",
+              "    ....",
+              "    ....",
+              "    ....",
+              "        ....####",
+              "        ....#..#",
+              "        ....#..#",
+              "        ....####" ]
+
+    cubeSize = 4
+    originRowA, originColA = 0, 4
+    originRowB, originColB = 4, 8
+    originRowC, originColC = 4, 12
+
+    panelA = Panel(originRowA, originColA, cubeSize,
+                   FRONT_FACE, CUBE[FRONT_FACE])
+
+    #           outDir, outRowRel, outColRel, fromDir, expRowRel, expColRel
+    testData = ((EAST ,     0    ,     3    ,  EAST  ,     3    ,    3    ),
+                (SOUTH,     3    ,     3    ,  EAST  ,     3    ,    3    ),
+                (WEST ,     3    ,     0    ,  EAST  ,     3    ,    3    ),
+                (NORTH,     0    ,     0    ,  EAST  ,     3    ,    3    ),
+                (EAST ,     0    ,     3    ,  SOUTH ,     3    ,    0    ),
+                (SOUTH,     3    ,     3    ,  SOUTH ,     3    ,    0    ),
+                (WEST ,     3    ,     0    ,  SOUTH ,     3    ,    0    ),
+                (NORTH,     0    ,     0    ,  SOUTH ,     3    ,    0    ),
+                (EAST ,     0    ,     3    ,  WEST  ,     0    ,    0    ),
+                (SOUTH,     3    ,     3    ,  WEST  ,     0    ,    0    ),
+                (WEST ,     3    ,     0    ,  WEST  ,     0    ,    0    ),
+                (NORTH,     0    ,     0    ,  WEST  ,     0    ,    0    ),
+                (EAST ,     0    ,     3    ,  NORTH ,     0    ,    3    ),
+                (SOUTH,     3    ,     3    ,  NORTH ,     0    ,    3    ),
+                (WEST ,     3    ,     0    ,  NORTH ,     0    ,    3    ),
+                (NORTH,     0    ,     0    ,  NORTH ,     0    ,    3    ),
+
+                (EAST ,     3    ,     3    ,  WEST  ,     3    ,    0    ),
+                (SOUTH,     3    ,     0    ,  WEST  ,     3    ,    0    ),
+                (WEST ,     0    ,     0    ,  WEST  ,     3    ,    0    ),
+                (NORTH,     0    ,     3    ,  WEST  ,     3    ,    0    ),
+                (EAST ,     3    ,     3    ,  NORTH ,     0    ,    0    ),
+                (SOUTH,     3    ,     0    ,  NORTH ,     0    ,    0    ),
+                (WEST ,     0    ,     0    ,  NORTH ,     0    ,    0    ),
+                (NORTH,     0    ,     3    ,  NORTH ,     0    ,    0    ),
+
+                (EAST ,     1    ,     3    ,  WEST  ,     1    ,    0    ),
+                (EAST ,     1    ,     3    ,  NORTH ,     0    ,    2    ),
+                (SOUTH,     3    ,     2    ,  NORTH ,     0    ,    2    ),
+                (SOUTH,     3    ,     2    ,  EAST  ,     2    ,    3    ),
+                (WEST ,     2    ,     0    ,  EAST  ,     2    ,    3    ),
+                (WEST ,     2    ,     0    ,  SOUTH ,     3    ,    1    ),
+                (NORTH,     0    ,     1    ,  SOUTH ,     3    ,    1    ),
+                (NORTH,     0    ,     1    ,  WEST  ,     1    ,    0    ),
+                (NORTH,     0    ,     1    ,  EAST  ,     2    ,    3    ))
+
+    for outDir, outRowRel, outColRel, fromDir, expRowRel, expColRel in testData:
+
+        outPanel = panelA
+        outFace  = panelA.face
+        outRow   = originRowA + outRowRel
+        outCol   = originColA + outColRel
+
+        inFace = outPanel.orientation[outDir]
+        inOrientation = CUBE[inFace]
+        while inOrientation[fromDir] != outFace:
+            inOrientation = inOrientation[1:] + (inOrientation[0],)
+
+        cube = 6 * [ None ]
+        cube[outFace] = outPanel
+
+        # First test: move to panelB
+        newPanel = Panel(originRowB, originColB, cubeSize, inFace,
+                         inOrientation)
+
+        cube[inFace] = newPanel
+        inPanel, inRow, inCol, inDir = move(board, cube, outPanel,
+                                            outRow, outCol, outDir, 1)
+
+        expPanel = newPanel
+        expDir   = (fromDir + 2) % 4
+        expRow   = originRowB + expRowRel
+        expCol   = originColB + expColRel
+
+        assert(inPanel == expPanel)
+        assert(inRow   == expRow)
+        assert(inCol   == expCol)
+        assert(inDir   == expDir)
+
+        # Second test: fail to move to panelC because of wall
+        newPanel = Panel(originRowC, originColC, cubeSize, inFace,
+                         inOrientation)
+
+        cube[inFace] = newPanel
+        inPanel, inRow, inCol, inDir = move(board, cube, outPanel,
+                                            outRow, outCol, outDir, 1)
+
+        # Move failed, hence no change from outgoing panel
+        assert(inPanel == outPanel)
+        assert(inRow   == outRow)
+        assert(inCol   == outCol)
+        assert(inDir   == outDir)
+
+testMove()
+
+################ main program #####################################
 
 input = openInput.openInput(sys.argv)
 
@@ -327,7 +445,9 @@ cubeSize = calcCubeSide(board)
 print(f"Cube is {cubeSize} on a side")
 
 cube = foldCube(board, cubeSize)
-print(cube)
+
+for side in cube:
+    print(side)
 
 # Find first column that is not '#' or space
 panel = cube[FRONT_FACE]
