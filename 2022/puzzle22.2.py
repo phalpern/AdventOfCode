@@ -45,10 +45,10 @@ import math
 # The *orientation* of a panel on a cube face is the mapping from the input
 # coordinate system to the 3-D cube coordinate system.  It is described, in our
 # design, as a mapping from each direction out of the 2-D panel to an adjacent
-# face of the cube. For example, if a panel, *P* is mapped to the right face,
-# it can be oriented such moving north out of the panel lands you on the front
-# face of the cube, or it can be oriented such that north goes to the top,
-# back, or bottom faces of the cube, for a total of four possible orientations.
+# face of the cube. For example, if a panel, *P* is mapped to the RIGHT face,
+# it can be oriented such moving NORTH out of the panel lands you on the FRONT
+# face of the cube, or it can be oriented such that NORTH goes to the TOP,
+# BACK, or BOTTOM faces of the cube, for a total of four possible orientations.
 #
 #
 # ## Detecting the size of the cube from the input
@@ -69,30 +69,56 @@ import math
 #
 # ## Folding the input into a cube
 #
-# We start with the *origin* panel, which contains the first non-space line in
-# the left-to-right, top-to-bottom reading of the input file.  We map the
-# origin panel to the **front** of the cube. Then, traversing the panel
+# Consider three adjacent panels of a 3x3 cube:
+#
+#   111
+#   1>1
+#   111
+#   ---
+#   222|333
+#   2>2|3>3
+#   222|333
+#
+# In the diagram above (which is not the way the cube is represented in the
+# input), the carot (>) points to the EAST direction of each panel. Panel 2 is
+# on the SOUTH edge of panel 1 and panel 1 is on the NORTH edge of panel 2. If
+# panel 1 is mapped to the TOP face of the cube with SOUTH pointing to the
+# RIGHT face, then panel 2 must be mapped to the RIGHT face, with NORTH
+# pointing to the TOP face.  Similarly, panel 3 is on the EAST edge of panel 2
+# and panel 2 is on the WEST edge of panel 3. Now that we know that panel 2 is
+# on the RIGHT face with NORTH pointing to the TOP face, we can figure out that
+# panel 3 must be on the BACK face with WEST pointing to the RIGHT face and
+# NORTH pointing to the TOP face. Thus, once we know the placement and
+# orientation of one panel, we can methodically fold its adjacent panels around
+# the cube.
+#
+# Our algorithm starts with the panel containing the first non-space character
+# in the left-to-right, top-to-bottom reading of the input file.  We map the
+# first panel to the FRONT face of the cube. Then, traversing the panel
 # adjacencies from the input, we map each new panel to a face. For example, if
-# there is an adjacent panel, *P*, *below* the origin, we map *P* to the bottom
-# face and set its orientation so that *up* points to the *front* face.
+# there is an adjacent panel, *P*, to the SOUTH of the first panel, we map *P*
+# to the BOTTOM face and set its orientation so that NORTH points to the FRONT
+# face.
 #
 # The formula for determining orientation is as follows:
 #
-#  1. Determine what face we came from (e.g., the **front** face, in the
-#     preceding example)
+#  1. Determine what face we came from (e.g., the FRONT face, in the preceding
+#     example)
 #  2. Map that face to the direction opposite the direction of traversal (e.g.,
-#     in the previous example we are traversing **down** so we map the
-#     **front** face to the **up** direction)
+#     in the previous example we are traversing SOUTH so we map the
+#     FRONT face to the NORTH direction)
 #  3. In theory, orientation can be represented as a single mapping of one side
 #     of the panel to one face of the cube, but it is convenient to compute the
-#     other three sides once the first is determined.
+#     other three adjacent faces once the first is determined.  A panel's
+#     orientation is thus represented as a tuple of four faces, starting with
+#     the face to the EAST and preceeding clockwise to the SOUTH, WEST, and
+#     NORTH-adjacent faces.
 #
-# Note that **traversing** the panel adjacencies in the input is different from
-# **navigating** from one panel to the next when following the path -- in the
-# former case, the orientation of the new panel is determined by the traversal,
-# in the latter case, the orientation is already set and can be quite
-# different, i.e., when the two panels in question are *not adjacent* in the
-# input but *end up adjacent* in the folded cube.
+# Note that **traversing** the panel adjacencies in the input during the
+# folding phase is different from **moving** from one panel to the next when
+# following a path during the navigation phase. Two panels that are not
+# adjacent in the input might be adjacent in the folded cube -- e.g., panels 1
+# and 3, above -- leading to hard-to-predict changes in orientation
 #
 #
 # ## Navigating the cube
@@ -102,7 +128,7 @@ import math
 # a change in direction.  In the former case, if moving results in navigating
 # off the edge of the current panel, then we must determine
 #
-#  1. which panel we moved to and
+#  1. which panel we laneded on and
 #  2. the landing position and relative direction of motion on the new panel.
 #
 # The new panel is a straightforward to determine: simply look up the panel
@@ -114,6 +140,19 @@ import math
 # (counting from zero) and land on the northern edge of a new panel, then we
 # must count 2 *columns* from the *end* to get the correct landing
 # position. The new logical direction is away from the face we came from.
+#
+# For example, lets start on the NORTH-EAST corner of panel 1 and try to move
+# one step further EAST. We know that panel 1 is on the TOP face of the cube
+# and panel 3 is on the RIGHT face, so the movement is as follows:
+#
+#   11*|333     111|*33
+#   1>1|3^3 --> 1>1|3^3
+#   111|333     111|333
+#
+# We use an asterisk to mark our position. The EAST edge of panel 1 is adjacent
+# to the NORTH edge of panel 2 and the landing position along the edge is
+# mirrored relative to the starting position, so we start on the left side of
+# the EAST edge and end on the right side of the NORTH edge.
 
 ################# CONSTANTS ########################
 
