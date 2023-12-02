@@ -227,9 +227,14 @@ class Panel:
         relRow = row - self.originRow
         relCol = col - self.originCol
 
-        # Get direction of offsets by rotating clockwise 90 degrees.
+        # If exiting in direction D, rotate D clockwise by 90 degrees to get
+        # the direction of "movement" clockwise from the nearest corner as
+        # a pair of row and column multipliers. If the offset is in the
+        # negative direction, add the size of the panel to get a positive
+        # edge offset.
         # This computation is theoretically a matrix-multiplication problem,
-        # but I've reduced it to a partial manual inner-product.
+        # but I've reduced it to a set of manual steps that omit many
+        # of the operations that inovlve zero.
         rowMul, colMul = MOVE_DELTAS[(direction + 1) % 4]
         offset = relRow * rowMul + relCol * colMul
         if rowMul < 0 or colMul < 0: offset += self.size - 1
