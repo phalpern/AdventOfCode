@@ -80,6 +80,15 @@ public:
   sentinel end()   { return {}; }
 };
 
+// Return the entire contents of the input stream as a string.
+// Assumes that file doesn't contain an 0xff character.
+std::string slurp(std::istream& is)
+{
+  std::string ret;
+  getline(is, ret, '\xff');
+  return ret;
+}
+
 }  // close namespace aoc
 
 #define ASSERT(...) do { \
