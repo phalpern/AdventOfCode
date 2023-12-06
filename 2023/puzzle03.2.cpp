@@ -38,28 +38,27 @@ int main(int argc, char *argv[])
         while ((nstart = row.find_first_of("0123456789", nend)) != npos)
         {
             nend = row.find_first_not_of("0123456789", nstart);
-            const char* gear = nullptr;
+            auto partnum = std::strtol(&row[nstart], nullptr, 10);
+
             if (row[nstart - 1] == '*')
-                gear = &row[nstart - 1];
-            else if (row[nend] == '*')
-                gear = &row[nend];
-            else
+                gearToParts[&row[nstart - 1]].push_back(partnum);
+            if (row[nend] == '*')
+                gearToParts[&row[nend]].push_back(partnum);
+
+            std::string_view prevRow = schematic[i - 1];
+            for (auto asterisk = prevRow.find("*", nstart - 1);
+                 asterisk != npos && asterisk <= nend;
+                 asterisk = prevRow.find("*", asterisk + 1))
             {
-                auto sym = schematic[i - 1].find("*", nstart - 1);
-                if (sym != npos && sym <= nend)
-                    gear = &schematic[i - 1][sym];
-                else
-                {
-                    sym = schematic[i + 1].find("*", nstart - 1);
-                    if (sym != npos && sym <= nend)
-                        gear = &schematic[i + 1][sym];
-                }
+                gearToParts[&prevRow[asterisk]].push_back(partnum);
             }
 
-            if (gear)
+            std::string_view nextRow = schematic[i + 1];
+            for (auto asterisk = nextRow.find("*", nstart - 1);
+                 asterisk != npos && asterisk <= nend;
+                 asterisk = nextRow.find("*", asterisk + 1))
             {
-                auto partnum = std::strtol(&row[nstart], nullptr, 10);
-                gearToParts[gear].push_back(partnum);
+                gearToParts[&nextRow[asterisk]].push_back(partnum);
             }
         }
     }
