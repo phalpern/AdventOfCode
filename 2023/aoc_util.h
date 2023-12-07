@@ -126,4 +126,17 @@ std::vector<INT_TYPE> parseNumbers(std::string_view s,
   return ret;
 }
 
+// Read a vector of integers from a single line in `is`.  If `prefix` is not
+// empty, it must match the start of the line, before the first integer to be
+// read.
+template <class INT_TYPE = int>
+std::vector<INT_TYPE> parseNumbers(std::istream&    is,
+                                   std::string_view prefix = "")
+{
+    std::string str;
+    getline(is, str);
+    ASSERT(! is.fail());
+    return parseNumbers<INT_TYPE>(str, prefix);
+}
+
 }  // close namespace aoc
