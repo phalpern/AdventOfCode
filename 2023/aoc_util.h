@@ -31,8 +31,7 @@ inline void assertFail(const char* file, int line, const char* expr)
 }
 
 #define ASSERT(...) do { \
-  bool c = __VA_ARGS__;  \
-  if (! c) assertFail(__FILE__, __LINE__, #__VA_ARGS__); \
+  if (false == (__VA_ARGS__)) assertFail(__FILE__, __LINE__, #__VA_ARGS__); \
 } while (false)
 
 inline
