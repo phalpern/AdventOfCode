@@ -12,22 +12,6 @@ using int64 = long long;
 
 using namespace aoc;
 
-std::vector<int64> parseNumbers(std::string_view s)
-{
-  std::istringstream is(std::string{s});
-
-  std::vector<int64> ret;
-  int64 v = 0;
-  while (! (is >> v).fail())
-  {
-    DEBUG(std::cout << v << ' ');
-    ret.push_back(v);
-  }
-  DEBUG(std::cout << std::endl);
-
-  return ret;
-}
-
 struct Range {
   int64 begin;
   int64 len;
@@ -113,10 +97,8 @@ int main(int argc, char *argv[])
 
   auto input = openInput(argc, argv);
   std::string str;
-  input >> str;
-  ASSERT(str == "seeds:");
   getline(input, str);
-  auto rawSeeds = parseNumbers(str);
+  auto rawSeeds = parseNumbers<int64>(str, "seeds:");
 
   std::vector<Range> seedRanges;
   for (std::size_t i = 0; i < rawSeeds.size(); i += 2)
@@ -134,7 +116,7 @@ int main(int argc, char *argv[])
 
     while (! getline(input, str).fail() && ! str.empty())
     {
-      auto nums = parseNumbers(str);
+      auto nums = parseNumbers<int64>(str);
       ASSERT(nums.size() == 3);
       int64 dest   = nums[0];
       int64 src    = nums[1];

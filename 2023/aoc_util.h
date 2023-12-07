@@ -1,10 +1,18 @@
 // aoc_util.h -- Utilities for Advent of Code challenges
 
 #include <cstdlib>
-#include <fstream>
 #include <iostream>
+#include <sstream>
+#include <fstream>
+#include <vector>
 #include <regex>
 #include <string>
+
+#ifdef DEBUGPRINT
+# define DEBUG(...) do { __VA_ARGS__; } while (false)
+#else
+# define DEBUG(...) ((void) 0)
+#endif
 
 namespace aoc {
 
@@ -21,6 +29,11 @@ inline void assertFail(const char* file, int line, const char* expr)
             << std::endl;
   std::exit(1);
 }
+
+#define ASSERT(...) do { \
+  bool c = __VA_ARGS__;  \
+  if (! c) assertFail(__FILE__, __LINE__, #__VA_ARGS__); \
+} while (false)
 
 inline
 std::ifstream openInput(int argc, char *argv[])
@@ -89,15 +102,28 @@ std::string slurp(std::istream& is)
   return ret;
 }
 
+// Read a vector of integers from `s`.  If `prefix` is not empty, it must match
+// the start of the line, before the first integer to be read.
+template <class INT_TYPE = int>
+std::vector<INT_TYPE> parseNumbers(std::string_view s,
+                                   std::string_view prefix = "")
+{
+  // Test and remove prefix
+  ASSERT(s.substr(0, prefix.length()) == prefix);
+  s.remove_prefix(prefix.length());
+
+  std::istringstream is(std::string{s});
+
+  std::vector<INT_TYPE> ret;
+  INT_TYPE v = 0;
+  while (! (is >> v).fail())
+  {
+    DEBUG(std::cout << v << ' ');
+    ret.push_back(v);
+  }
+  DEBUG(std::cout << std::endl);
+
+  return ret;
+}
+
 }  // close namespace aoc
-
-#define ASSERT(...) do { \
-  bool c = __VA_ARGS__;  \
-  if (! c) assertFail(__FILE__, __LINE__, #__VA_ARGS__); \
-} while (false)
-
-#ifdef DEBUGPRINT
-# define DEBUG(...) do { __VA_ARGS__; } while (false)
-#else
-# define DEBUG(...) ((void) 0)
-#endif
