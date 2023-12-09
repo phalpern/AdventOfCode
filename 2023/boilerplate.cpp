@@ -1,5 +1,6 @@
 // -*- mode: c++; c-basic-offset: 2 -*-
 
+// #define DEBUGPRINT
 #include <aoc_util.h>
 
 using namespace aoc;
