@@ -3,3 +3,4 @@
 */build
 */.vscode
 *:Zone.Identifier
+*.snapshot

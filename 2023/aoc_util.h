@@ -16,6 +16,9 @@
 
 namespace aoc {
 
+using int64  = long long;
+using uint64 = unsigned long long;
+
 template <class... Args>
 inline void bail(const std::string& a0, const Args&... args)
 {
@@ -116,11 +119,7 @@ std::vector<INT_TYPE> parseNumbers(std::string_view s,
   std::vector<INT_TYPE> ret;
   INT_TYPE v = 0;
   while (! (is >> v).fail())
-  {
-    DEBUG(std::cout << v << ' ');
     ret.push_back(v);
-  }
-  DEBUG(std::cout << std::endl);
 
   return ret;
 }
@@ -136,6 +135,26 @@ std::vector<INT_TYPE> parseNumbers(std::istream&    is,
     getline(is, str);
     ASSERT(! is.fail());
     return parseNumbers<INT_TYPE>(str, prefix);
+}
+
+template <class Item>
+std::ostream& printItem(std::ostream& os, const Item& v)
+{
+    return os << v;
+}
+
+template <class Key, class Val>
+std::ostream& printItem(std::ostream& os, const std::pair<Key, Val>& p)
+{
+    return os << '(' << p.first << ", " << p.second << ')';
+}
+
+template <class Container>
+std::ostream& printContainer(std::ostream& os, const Container& c)
+{
+    for (auto&& item : c)
+        printItem(os, item) << ' ';
+    return os;
 }
 
 }  // close namespace aoc
