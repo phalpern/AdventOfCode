@@ -6,8 +6,8 @@ CXX_FLAGS = -std=c++20 -I. $(OPT)
 
  .PRECIOUS : puzzle%.exe
 
-puzzle% : puzzle%.exe .FORCE
+puzzle% : bin/puzzle%.exe .FORCE
 	time ./$< $(ARG)
 
-puzzle%.exe : puzzle%.cpp aoc_util.h
+bin/puzzle%.exe : puzzle%.cpp aoc_util.h
 	$(CXX) $(CXX_FLAGS) $< -o $@

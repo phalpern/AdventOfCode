@@ -1,4 +1,4 @@
-// aoc_util.h -- Utilities for Advent of Code challenges
+// -*- mode: c++; c-basic-offset: 2 -*-
 
 #include <cstdlib>
 #include <iostream>
@@ -41,17 +41,25 @@ inline
 std::ifstream openInput(int argc, char *argv[])
 {
   std::string fname(argv[0]);
-  auto puzzle = fname.find("puzzle");
+  auto puzzle = fname.find("bin/puzzle");
   if (puzzle != std::string::npos)
   {
+    // Strip off "bin/"
+    fname.erase(fname.begin() + puzzle, fname.begin() + puzzle + 4);
     auto dot = fname.find('.', puzzle);
     if (dot != std::string::npos)
       fname.resize(dot);
-  }
 
-  fname += '_';
-  fname += argc > 1 ? argv[1] : "input";
-  fname += ".txt";
+    fname = "input/" + fname;
+    fname += '_';
+    fname += argc > 1 ? argv[1] : "input";
+    fname += ".txt";
+  }
+  else
+  {
+    ASSERT(argc > 1);
+    fname = argv[1];
+  }
 
   std::ifstream ret(fname);
   if (! ret)
