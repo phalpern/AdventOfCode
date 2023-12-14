@@ -1,10 +1,10 @@
 CXX = clang++
 OPT := -g
-CXX_FLAGS = -std=c++20 -I. $(OPT)
+CXX_FLAGS = -std=c++20 -I. -Wall $(OPT)
 
 .FORCE:
 
- .PRECIOUS : puzzle%.exe
+.PRECIOUS : bin/puzzle%.exe
 
 puzzle% : bin/puzzle%.exe .FORCE
 	time ./$< $(ARG)

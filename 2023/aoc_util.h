@@ -8,11 +8,18 @@
 #include <regex>
 #include <string>
 
-#ifdef DEBUGPRINT
-# define DEBUG(...) do { __VA_ARGS__; } while (false)
-#else
-# define DEBUG(...) ((void) 0)
+#ifndef DEBUGPRINT
+# define DEBUGPRINT 0
+#elif (1 - DEBUGPRINT - 1) == 2  // if defined as blank
+# undef DEBUGPRINT
+# define DEBUGPRINT 1
 #endif
+
+# define DEBUG_N(LEVEL, ...) do { if (LEVEL <= DEBUGPRINT)       \
+    { __VA_ARGS__; } } while(false)
+#define DEBUG(...) DEBUG_N(1, __VA_ARGS__)
+#define DEBUG2(...) DEBUG_N(2, __VA_ARGS__)
+#define DEBUG3(...) DEBUG_N(3, __VA_ARGS__)
 
 namespace aoc {
 
@@ -44,13 +51,12 @@ std::ifstream openInput(int argc, char *argv[])
   auto puzzle = fname.find("bin/puzzle");
   if (puzzle != std::string::npos)
   {
-    // Strip off "bin/"
-    fname.erase(fname.begin() + puzzle, fname.begin() + puzzle + 4);
+    // replace "bin/" with "input/"
+    fname.replace(puzzle, 3, "input/");
     auto dot = fname.find('.', puzzle);
     if (dot != std::string::npos)
       fname.resize(dot);
 
-    fname = "input/" + fname;
     fname += '_';
     fname += argc > 1 ? argv[1] : "input";
     fname += ".txt";
