@@ -1,6 +1,6 @@
 // -*- mode: c++; c-basic-offset: 2 -*-
 
-// #define DEBUGPRINT
+#define DEBUGPRINT
 #include <aoc_util.h>
 
 using namespace aoc;
@@ -14,5 +14,5 @@ int main(int argc, char *argv[])
   {
   }
 
-  std::cout << "result = " << result << std::endl;
+  std::cout << "\nresult = " << result << "\n\n";
 }
