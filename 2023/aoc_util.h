@@ -138,6 +138,16 @@ std::vector<INT_TYPE> parseNumbers(std::string_view s,
   return ret;
 }
 
+// Parse the specified string view as an integral value
+int64 strviewToInt(std::string_view s)
+{
+  char *end;
+  int64 result = strtoll(s.data(), &end, 0);
+  ASSERT(end <= &*s.end());
+
+  return result;
+}
+
 // Read a vector of integers from a single line in `is`.  If `prefix` is not
 // empty, it must match the start of the line, before the first integer to be
 // read.
