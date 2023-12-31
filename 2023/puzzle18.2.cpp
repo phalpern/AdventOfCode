@@ -135,13 +135,12 @@ int main(int argc, char *argv[])
 
   // Sort edges by startCol()
   DEBUG2(printContainer(std::cout, trench, "\n"));
-  std::sort(trench.begin(), trench.end(),
-            [](const Edge& a, const Edge& b) -> bool
-              { return a.startCol() < b.startCol(); });
+  std::ranges::sort(trench, [](const Edge& a, const Edge& b) -> bool
+                            { return a.startCol() < b.startCol(); });
   DEBUG3(printContainer(std::cout << "*** Sorted:\n", trench, "\n"));
 
   // Sort and remove duplicate horizontal bands
-  std::sort(horizontalBands.begin(), horizontalBands.end());
+  std::ranges::sort(horizontalBands);
   auto eraseIter = std::unique(horizontalBands.begin(), horizontalBands.end());
   horizontalBands.erase(eraseIter, horizontalBands.end());
   DEBUG(std::cout << horizontalBands.size() << " horizontal bands\n");
