@@ -155,30 +155,31 @@ template <class INT_TYPE = int>
 std::vector<INT_TYPE> parseNumbers(std::istream&    is,
                                    std::string_view prefix = "")
 {
-    std::string str;
-    getline(is, str);
-    ASSERT(! is.fail());
-    return parseNumbers<INT_TYPE>(str, prefix);
+  std::string str;
+  getline(is, str);
+  ASSERT(! is.fail());
+  return parseNumbers<INT_TYPE>(str, prefix);
 }
 
 template <class Item>
 std::ostream& printItem(std::ostream& os, const Item& v)
 {
-    return os << v;
+  return os << v;
 }
 
 template <class Key, class Val>
 std::ostream& printItem(std::ostream& os, const std::pair<Key, Val>& p)
 {
-    return os << '(' << p.first << ", " << p.second << ')';
+  return os << '(' << p.first << ", " << p.second << ')';
 }
 
 template <class Container>
-std::ostream& printContainer(std::ostream& os, const Container& c)
+std::ostream& printContainer(std::ostream& os, const Container& c,
+                             std::string_view separator = " ")
 {
-    for (auto&& item : c)
-        printItem(os, item) << ' ';
-    return os;
+  for (auto&& item : c)
+    printItem(os, item) << separator;
+  return os;
 }
 
 }  // close namespace aoc
