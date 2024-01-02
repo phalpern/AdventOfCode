@@ -74,40 +74,62 @@ std::ifstream openInput(int argc, char *argv[])
   return ret;
 }
 
+class InputLineIterator;
 class InputLineSentinel { };
-
-// Iterator to traverse an input file line by line
-class InputLineIterator {
-  std::istream& m_input;
-  std::string   m_current;
-
-public:
-  explicit InputLineIterator(std::istream& is) : m_input(is)
-    { getline(is, m_current); }
-
-  const std::string& operator*() const { return m_current; }
-  const std::string* operator->() const { return &m_current; }
-
-  InputLineIterator& operator++()
-    { m_current.clear(); getline(m_input, m_current); return *this; }
-  InputLineIterator operator++(int) { auto tmp(*this); ++*this; return tmp; }
-
-  friend bool operator==(const InputLineIterator& i, InputLineSentinel)
-    { return i.m_current.empty() && i.m_input.eof(); }
-};
 
 // Range to traverse an input file line-by-line
 class InputByLine {
-  std::istream& m_input;
+  std::istream& m_input;             // input stream
+  std::string   m_current;           // look-ahead line
+  bool          m_lookAhead = false; // true if look-ahead has occured
+
 public:
   using iterator = InputLineIterator;
   using sentinel = InputLineSentinel;
 
   InputByLine(std::istream& is) : m_input(is) { } // implicit
 
-  iterator begin() { return iterator{m_input}; }
+  iterator begin();
   sentinel end()   { return {}; }
+
+  const std::string& current()
+  {
+    if (! m_lookAhead)
+    {
+      m_current.clear();
+      getline(m_input, m_current);
+      m_lookAhead = ! m_input.fail();
+    }
+    return m_current;
+  }
+
+  void next() { if (! m_lookAhead) current(); m_lookAhead = false; }
+
+  bool eof() { (void) current(); return m_input.fail(); }
 };
+
+// Iterator to traverse an input file line by line
+class InputLineIterator {
+  InputByLine* m_inputByLine;
+
+public:
+  explicit InputLineIterator(InputByLine *ibl) : m_inputByLine(ibl) { }
+
+  const std::string& operator*()  const { return  m_inputByLine->current(); }
+  const std::string* operator->() const { return &m_inputByLine->current(); }
+
+  InputLineIterator& operator++() { m_inputByLine->next(); return *this; }
+
+  friend bool operator==(const InputLineIterator& i, InputLineSentinel)
+    { return i.m_inputByLine->eof(); }
+};
+
+inline InputLineIterator InputByLine::begin()
+{
+  m_lookAhead = false;
+  (void) current();
+  return iterator{this};
+}
 
 // Return the entire contents of the input stream as a string.
 // Assumes that file doesn't contain an 0xff character.
@@ -139,10 +161,10 @@ std::vector<INT_TYPE> parseNumbers(std::string_view s,
 }
 
 // Parse the specified string view as an integral value
-int64 strviewToInt(std::string_view s)
+int64 strviewToInt(std::string_view s, int radix = 0)
 {
   char *end;
-  int64 result = strtoll(s.data(), &end, 0);
+  int64 result = strtoll(s.data(), &end, radix);
   ASSERT(end <= &*s.end());
 
   return result;
